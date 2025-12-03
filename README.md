@@ -1,5 +1,3 @@
-# fish-image-classification
-
 # Multiclass Fish Image Classification
 
 **Project summary**
