@@ -230,12 +230,3 @@ For Colab users: ensure Runtime → Change runtime type → GPU.
 
 ---
 
-# License & acknowledgements
-
-This project is released under the MIT License — feel free to adapt for academic or commercial use. Acknowledge the use of ImageNet-pretrained backbones and any external datasets or contributors.
-
----
-
-# Contact
-
-If you want changes to the README or to include specific code snippets from your repository, tell me which sections to expand (e.g., exact Colab cells, full augmentation script, or `requirements.txt`) and I will update the README accordingly.
