@@ -9,7 +9,7 @@ This project implements a complete **end-to-end deep learning pipeline** for **m
 ---
 
 ## 📂 Dataset
-The dataset follows a directory-per-class structure compatible with `flow_from_directory`.
+The dataset follows a directory-per-class structure compatible with `flow_from_directory`:
 
 data/
 ├── train/
@@ -26,6 +26,7 @@ https://drive.google.com/drive/folders/1iKdOs4slf3XvNWkeSfsszhPRggfJ2qEd
 ---
 
 ## 🧹 Data Preprocessing & Augmentation
+
 - Image size: **256 × 256**
 - Color mode: **RGB**
 - Rescaling: `1./255` (for Custom CNN)
@@ -80,7 +81,6 @@ https://drive.google.com/drive/folders/1iKdOs4slf3XvNWkeSfsszhPRggfJ2qEd
 - F1-score
 - Confusion Matrix
 
-
 ---
 
 ## 🚀 Deployment (Streamlit)
@@ -94,4 +94,11 @@ This project includes a **Streamlit web application** for real-time fish species
 **Step 1: Install dependencies**
 ```bash
 pip install -r requirements.txt
+
+Step 2: Run the Streamlit app
+streamlit run app.py
+
+Step 3: Open the app in your browser
+http://localhost:8501
+
 
