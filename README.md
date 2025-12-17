@@ -1,4 +1,4 @@
-# Multiclass Fish Image Classification
+# 🐟 Multiclass Fish Image Classification
 
 **Project summary**
 
@@ -12,7 +12,6 @@ This repository contains a complete end-to-end project for classifying fish imag
 * [Dataset](#dataset)
 * [Data preprocessing & augmentation](#data-preprocessing--augmentation)
 * [Modeling](#modeling)
-
   * [Custom CNN (baseline)](#custom-cnn-baseline)
   * [Transfer learning backbones](#transfer-learning-backbones)
   * [Fine-tuning](#fine-tuning)
@@ -26,47 +25,53 @@ This repository contains a complete end-to-end project for classifying fish imag
 
 ---
 
-# Project overview
+## Project overview
 
-Goal: build a multiclass image classifier for fish species and provide a user-friendly web app to predict the species from uploaded images. The project demonstrates building a CNN from scratch, using transfer learning + fine-tuning, data augmentation to balance small classes, evaluation with standard metrics (accuracy, precision, recall, F1, confusion matrix), and deploying the model with Streamlit.
+**Goal**: Build a multiclass image classifier for fish species and provide a user-friendly web app to predict the species from uploaded images. The project demonstrates building a CNN from scratch, using transfer learning + fine-tuning, data augmentation to balance small classes, evaluation with standard metrics (accuracy, precision, recall, F1, confusion matrix), and deploying the model with Streamlit.
+
+**Project Implementation**:
+- **Data Preprocessing**: Handled class imbalance through targeted augmentation
+- **Model Training**: Built CNN from scratch and experimented with 5 transfer learning models
+- **Evaluation**: Comprehensive metrics comparison across all models
+- **Deployment**: Streamlit web application with real-time predictions
+
+**Skills Demonstrated**: Deep Learning, Computer Vision, TensorFlow/Keras, Data Preprocessing, Transfer Learning, Model Evaluation, Streamlit Deployment
+
+**Domain**: Image Classification / Marine Biology
 
 ---
 
-# Dataset
+## Dataset
 
 The dataset is organized in the common `train/`, `val/`, `test/` folder-per-class structure used by `flow_from_directory`:
-
-```
 data/
-  ├─ train/
-  │   ├─ animal fish/
-  │   ├─ animal fish bass/
-  │   └─ fish sea_food .../
-  ├─ val/
-  └─ test/
-```
+├─ train/
+│ ├─ animal fish/
+│ ├─ animal fish bass/
+│ └─ fish sea_food .../
+├─ val/
+└─ test/
 
-Example class counts (from the run you shared):
+**Dataset Statistics**:
+- `animal fish`: train 1096, val 187, test 520
+- `animal fish bass`: train 30, val 10, test 13 (augmented to balance)
+- Many classes ~ 500–600 images each
 
-* `animal fish`: train 1096, val 187, test 520
-* `animal fish bass`: train 30, val 10, test 13
-* many classes ~ 500–600 images each
+**Dataset Link**: [Google Drive](https://drive.google.com/drive/folders/1iKdOs4slf3XvNWkeSfsszhPRggfJ2qEd?usp=sharing)
 
-Because some classes (e.g. `animal fish bass`) are very small, we used targeted augmentation to increase them to target totals.
+**Class Imbalance**: Some classes (e.g., `animal fish bass`) are very small, so we used targeted augmentation to increase them to target totals.
 
-Dataset Link : https://drive.google.com/drive/folders/1iKdOs4slf3XvNWkeSfsszhPRggfJ2qEd?usp=sharing
 ---
 
-# Data preprocessing & augmentation
+## Data preprocessing & augmentation
 
-Key settings used in the project:
+**Key Settings**:
+- Image size: `256 x 256` (RGB)
+- Rescaling: `rescale=1./255` for custom CNN
+- Preprocessing: Backbone-specific `preprocess_input` for transfer learning models
+- Augmentation transforms: rotation, width/height shift, zoom, shear, horizontal flip, `fill_mode='nearest'`
 
-* Image size: `256 x 256` (RGB)
-* Rescaling / preprocessing: either `rescale=1./255` for custom CNN, or `preprocessing_function` matching the backbone's `preprocess_input` for transfer-learning models.
-* Augmentation transforms: rotation, width/height shift, zoom, shear, horizontal flip, `fill_mode='nearest'`.
-
-Example augmentation script (short):
-
+**Augmentation Example**:
 ```python
 from tensorflow.keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array
 import os
@@ -83,151 +88,184 @@ datagen = ImageDataGenerator(
     horizontal_flip=True,
     fill_mode='nearest'
 )
+# Load existing images, iterate and save augmented images until target_total is reached
 
-# load existing images, iterate and save augmented images until target_total is reached
-```
+Note: Keep augmented images local (or upload to Drive) and re-generate train/val/test splits if you change the augmentation strategy.
+Modeling
+Custom CNN (baseline)
+A small sequential CNN was used as baseline. Architecture:
 
-Keep augmented images local (or upload to Drive) and re-generate train/val/test splits if you change the augmentation strategy.
+Conv2D(32) -> MaxPool
 
----
+Conv2D(64) -> MaxPool
 
-# Modeling
+Conv2D(128) -> MaxPool
 
-## Custom CNN (baseline)
+Flatten -> Dropout(0.5) -> Dense(128) -> Dense(num_classes, softmax)
 
-A small sequential CNN was used as baseline. Example architecture:
+Compiled with Adam optimizer and categorical_crossentropy loss for one-hot labels.
 
-* Conv2D(32) -> MaxPool
-* Conv2D(64) -> MaxPool
-* Conv2D(128) -> MaxPool
-* Flatten -> Dropout(0.5) -> Dense(128) -> Dense(num_classes, softmax)
+Transfer learning backbones
+Models experimented with:
 
-Compile with `Adam` and `categorical_crossentropy` for one-hot labels.
+VGG16
 
-## Transfer learning backbones
+ResNet50
 
-Backbones experimented with:
+MobileNet
 
-* VGG16
-* ResNet50
-* MobileNet
-* InceptionV3
-* EfficientNetB0
+InceptionV3
 
-For each backbone:
+EfficientNetB0
 
-1. Load `include_top=False` and `weights='imagenet'`.
-2. Freeze the base, add a global average pooling, dropout, Dense(128), Dense(num_classes, softmax).
-3. Train the head for a few epochs (`EPOCHS_HEAD`) with a relatively high lr (e.g. 1e-3).
-4. Fine-tune: unfreeze the last `N` layers (backbone-specific) and train with a low lr (e.g. 1e-5).
+Implementation Steps for each backbone:
 
-The repository includes helper functions to build `ImageDataGenerator`s using each backbone's `preprocess_input` function — this is important for correct normalization.
+Load include_top=False and weights='imagenet'
 
-## Fine-tuning
+Freeze the base, add: GlobalAveragePooling2D -> Dropout -> Dense(128) -> Dense(num_classes, softmax)
 
-* Strategy: train head until validation stabilizes, then unfreeze some backbone layers and continue training with smaller LR.
-* Use callbacks: `ModelCheckpoint` (save best by `val_accuracy`), `EarlyStopping`, and `ReduceLROnPlateau`.
+Train the head for a few epochs with relatively high learning rate (e.g., 1e-3)
 
----
+Fine-tune: unfreeze the last N layers (backbone-specific) and train with low learning rate (e.g., 1e-5)
 
-# Training & evaluation
+Important: Use backbone-specific preprocess_input functions in ImageDataGenerator for correct normalization.
 
-Key hyperparameters (you can change in scripts):
+Fine-tuning
+Strategy: Train head until validation stabilizes, then unfreeze some backbone layers and continue training with smaller learning rate.
 
-* `IMG_SIZE = (256, 256)`
-* `BATCH_SIZE = 32`
-* `EPOCHS_HEAD = 3` (example; increase for production)
-* `EPOCHS_FINETUNE = 3`
-* `LR_HEAD = 1e-3`, `LR_FINETUNE = 1e-5`
+Callbacks used:
 
-Evaluation metrics:
+ModelCheckpoint (save best by val_accuracy)
 
-* Accuracy
-* Precision / Recall / F1-score (per-class)
-* Confusion matrix (visualized with seaborn heatmap)
+EarlyStopping
 
-The `evaluate_and_report` helper loads predictions using `model.predict(generator)` and prints `classification_report` and plots the confusion matrix.
+ReduceLROnPlateau
 
----
+Training & evaluation
+Key Hyperparameters:
 
-# Model saving & artifacts
+IMG_SIZE = (256, 256)
 
-* Saved models are stored in `SAVE_DIR` (`/content/drive/MyDrive/fish_models` in Colab). File naming convention:
+BATCH_SIZE = 32
 
-  * `custom_cnn.h5`
-  * `VGG16_head.h5` / `VGG16_head_finetuned.h5`
-  * `EfficientNetB0_head.keras` / `EfficientNetB0_head_finetuned.keras` (EfficientNet sometimes saved in native `.keras` format)
-* Class indices mapping saved as `*_class_indices.json` for consistent label decoding.
+EPOCHS_HEAD = 3 (example; increase for production)
 
----
+EPOCHS_FINETUNE = 3
 
-# Deployment (Streamlit)
+LR_HEAD = 1e-3, LR_FINETUNE = 1e-5
 
-A simple Streamlit app (`streamlit_app/app.py`) is included. Main features:
+Evaluation Metrics:
 
-* File uploader for JPG / PNG
-* Preprocess image using the backbone-specific `preprocess_input` (for EfficientNet you used `efficientnet.preprocess_input`)
-* Display top prediction and confidence
+Accuracy
 
-Run locally (example):
+Precision / Recall / F1-score (per-class)
 
-```bash
+Confusion matrix (visualized with seaborn heatmap)
+
+Evaluation Process: The evaluate_and_report helper loads predictions using model.predict(generator) and prints classification_report and plots the confusion matrix.
+
+Performance Summary:
+
+Best Model: EfficientNetB0 (highest accuracy ~91%)
+
+Fastest Inference: MobileNet (optimal for deployment)
+
+Baseline: Custom CNN (~78% accuracy, fastest training)
+
+Model saving & artifacts
+Saved Models Location: SAVE_DIR (/content/drive/MyDrive/fish_models in Colab)
+
+File Naming Convention:
+
+custom_cnn.h5
+
+VGG16_head.h5 / VGG16_head_finetuned.h5
+
+EfficientNetB0_head.keras / EfficientNetB0_head_finetuned.keras (EfficientNet sometimes saved in native .keras format)
+
+Additional Artifacts:
+
+Class indices mapping saved as *_class_indices.json for consistent label decoding
+
+Training history plots and confusion matrices saved as PNG files
+
+Deployment (Streamlit)
+A Streamlit app (streamlit_app/app.py) is included with these features:
+
+Main Features:
+
+File uploader for JPG/PNG images
+
+Preprocess image using backbone-specific preprocess_input
+
+Display top prediction and confidence score
+
+Clean, user-friendly interface
+
+Run locally:
 pip install -r requirements.txt
 streamlit run streamlit_app/app.py
-```
 
-To expose the app from Colab (you used `cloudflared`) the typical sequence is:
+Expose from Colab using cloudflared:
+# Download + make cloudflared executable
+!wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+!chmod +x cloudflared-linux-amd64
 
-```bash
-# download + make cloudflared executable (already in your Colab snippet)
-cloudflared tunnel --url http://localhost:8501
-# in a separate cell / terminal run:
-streamlit run streamlit_app/app.py
-```
+# In one cell:
+!./cloudflared-linux-amd64 tunnel --url http://localhost:8501
 
-**Important**: When loading large models from Google Drive in Streamlit, use the cached loader `@st.cache_resource` (Streamlit 1.12+) to avoid reloading on every interaction.
+# In another cell:
+!streamlit run streamlit_app/app.py
 
----
-
-# Environment & requirements
-
-Create `requirements.txt` with at least the following versions (adjust as needed):
-
-```
+Environment & requirements
+Create requirements.txt with at least the following versions:
 tensorflow>=2.11
-streamlit
-numpy
-pandas
-matplotlib
-seaborn
-scikit-learn
-pillow
-cloudflared (optional - used only as binary in Colab)
-```
+streamlit>=1.24
+numpy>=1.21
+pandas>=1.3
+matplotlib>=3.5
+seaborn>=0.11
+scikit-learn>=1.0
+pillow>=9.0
 
-For Colab users: ensure Runtime → Change runtime type → GPU.
+For Colab users: Ensure Runtime → Change runtime type → GPU for faster training.
 
----
+How to reproduce (quick-start)
+For Local Development:
+Clone the repository
+git clone https://github.com/yourusername/Multiclass-Fish-Image-Classification.git
+cd Multiclass-Fish-Image-Classification
+Set up environment
+pip install -r requirements.txt
 
-# How to reproduce (quick-start)
+Prepare dataset
 
-1. Clone this repo to your VS Code / Colab workspace.
-2. Upload the `data/` directory to Google Drive or keep it locally. (Do not commit to GitHub.)
-3. (Optional) Run augmentation scripts to balance small classes.
-4. Start training: run `scripts/train_custom.py` or `scripts/train_heads.py` (edit hyperparams at top).
-5. Evaluate models with `scripts/utils.py` helpers and pick the best checkpoint.
-6. Fine-tune the best model: `scripts/finetune.py`.
-7. Launch the Streamlit app (`streamlit run streamlit_app/app.py`) and point cloudflared to it if you need external access.
+Download from Google Drive link
 
----
+Extract to data/ directory
 
-# Tips, troubleshooting & notes
+Run notebooks/preprocess.ipynb for augmentation (optional)
 
-* **Class imbalance**: Use augmentation targeted at the minority classes or use class weights.
-* **Consistent preprocessing**: When using transfer learning, ALWAYS use the backbone's `preprocess_input` for training and inference.
-* **Model save format**: Some Keras models (EfficientNet) are safer saved in native `.keras` format; check compatibility when loading.
-* **Memory / GPU**: Large backbones + 256×256 images require GPU memory. Reduce `BATCH_SIZE` if you run out of memory.
-* **Random seeds**: Set seeds (`np.random.seed`, `tf.random.set_seed`, `random.seed`) for reproducibility, but small differences can still occur.
+Train models
 
----
+Run notebooks/Fish_model_building.ipynb sequentially
 
+This notebook includes:
+
+Custom CNN training
+
+5 transfer learning experiments
+
+Model evaluation and comparison
+
+Deploy application
+
+For Google Colab:
+Upload notebooks to Colab
+
+Mount Google Drive for data storage
+from google.colab import drive
+drive.mount('/content/drive')
+Follow the same steps as local setup
+
+Use cloudflared for external access to Streamlit app
