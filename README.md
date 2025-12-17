@@ -85,8 +85,13 @@ https://drive.google.com/drive/folders/1iKdOs4slf3XvNWkeSfsszhPRggfJ2qEd
 
 ## 🚀 Deployment (Streamlit)
 
-### Run Locally
+This project includes a **Streamlit web application** for real-time fish species classification using the **EfficientNetB0 fine-tuned model**.
+
+---
+
+### 🔹 Local Deployment
+
+**Step 1: Install dependencies**
 ```bash
 pip install -r requirements.txt
-streamlit run streamlit_app/app.py
 
