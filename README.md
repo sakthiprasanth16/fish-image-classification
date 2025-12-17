@@ -20,9 +20,6 @@ This repository contains a complete end-to-end project for classifying fish imag
 * [Model saving & artifacts](#model-saving--artifacts)
 * [Deployment (Streamlit)](#deployment-streamlit)
 * [Environment & requirements](#environment--requirements)
-* [How to reproduce (quick-start)](#how-to-reproduce-quick-start)
-* [Tips, troubleshooting & notes](#tips-troubleshooting--notes)
-* [License & acknowledgements](#license--acknowledgements)
 
 ---
 
@@ -209,24 +206,3 @@ For Colab users: ensure Runtime → Change runtime type → GPU.
 
 ---
 
-# How to reproduce (quick-start)
-
-1. Clone this repo to your VS Code / Colab workspace.
-2. Upload the `data/` directory to Google Drive or keep it locally. (Do not commit to GitHub.)
-3. (Optional) Run augmentation scripts to balance small classes.
-4. Start training: run `scripts/train_custom.py` or `scripts/train_heads.py` (edit hyperparams at top).
-5. Evaluate models with `scripts/utils.py` helpers and pick the best checkpoint.
-6. Fine-tune the best model: `scripts/finetune.py`.
-7. Launch the Streamlit app (`streamlit run streamlit_app/app.py`) and point cloudflared to it if you need external access.
-
----
-
-# Tips, troubleshooting & notes
-
-* **Class imbalance**: Use augmentation targeted at the minority classes or use class weights.
-* **Consistent preprocessing**: When using transfer learning, ALWAYS use the backbone's `preprocess_input` for training and inference.
-* **Model save format**: Some Keras models (EfficientNet) are safer saved in native `.keras` format; check compatibility when loading.
-* **Memory / GPU**: Large backbones + 256×256 images require GPU memory. Reduce `BATCH_SIZE` if you run out of memory.
-* **Random seeds**: Set seeds (`np.random.seed`, `tf.random.set_seed`, `random.seed`) for reproducibility, but small differences can still occur.
-
----
