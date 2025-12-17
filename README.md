@@ -101,4 +101,34 @@ streamlit run app.py
 Step 3: Open the app in your browser
 http://localhost:8501
 
+🔹 Google Colab Deployment (Open Streamlit in Colab)
+
+Streamlit apps running on Google Colab are not accessible directly.
+To open the app in a browser, we use Cloudflare Tunnel (cloudflared).
+Step 1: Install Cloudflared
+
+wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O cloudflared
+chmod +x cloudflared
+mv cloudflared /usr/local/bin/
+
+
+Step 2: Create the Streamlit app
+
+%%writefile app.py
+# Streamlit app code using EfficientNetB0 fine-tuned model
+
+
+Step 3: Run Streamlit in background
+
+streamlit run app.py &>/dev/null &
+
+
+Step 4: Expose Streamlit app and get public URL
+
+cloudflared tunnel --url http://localhost:8501
+
+
+After running this command, a public HTTPS URL will be displayed in the output.
+Open that URL in any browser to access the Streamlit application.
+
 
