@@ -103,6 +103,21 @@ http://localhost:8501
 
 ---
 
+## 🧠 Simple Memory Trick
+- **Open code block** → ```bash  
+- **Close code block** → ```  
+- Then write normal text
+
+---
+
+## ❌ WRONG (What you did)
+```markdown
+```bash
+pip install -r requirements.txt
+Step 2 text here   ❌ (still inside code block)
+
+---
+
 ### 🔹 Google Colab Deployment (Open Streamlit in Colab)
 
 Streamlit apps running on Google Colab are not accessible directly.
