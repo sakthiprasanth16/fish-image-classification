@@ -198,8 +198,6 @@ pandas
 matplotlib
 seaborn
 scikit-learn
-pillow
-cloudflared (optional - used only as binary in Colab)
 ```
 
 For Colab users: ensure Runtime → Change runtime type → GPU.
