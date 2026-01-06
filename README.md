@@ -3,6 +3,9 @@
 **Project summary**
 
 This repository contains a complete end-to-end project for classifying fish images into multiple species using deep learning. It includes data preprocessing and augmentation, training a CNN from scratch, experimenting with five transfer-learning backbones (VGG16, ResNet50, MobileNet, InceptionV3, EfficientNetB0), model evaluation, saving the best models, and deploying an interactive Streamlit web app for inference.
+Live demo (Hugging Face Space):  
+👉 [https://huggingface.co/spaces/prasanthr0416/fish_image_classification]
+
 
 ---
 
